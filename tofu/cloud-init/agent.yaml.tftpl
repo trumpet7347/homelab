@@ -1,0 +1,36 @@
+#cloud-config
+hostname: ${hostname}
+fqdn: ${hostname}
+manage_etc_hosts: true
+
+# When user_data_file_id is set, Proxmox's ciuser/sshkeys are ignored in
+# favor of this user-data. We must declare the user + SSH key here, or
+# nothing gets installed on first boot.
+users:
+  - default
+  - name: ${ssh_user}
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: [users, admin, sudo]
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ${ssh_public_key}
+
+package_update: true
+package_upgrade: false
+packages:
+  - curl
+  - netcat-openbsd
+
+runcmd:
+  - |
+    until nc -z ${server_ip} 6443; do
+      echo "[k3s-agent] waiting for server ${server_ip}:6443..."
+      sleep 5
+    done
+  - |
+    curl -sfL https://get.k3s.io | \
+      K3S_URL=https://${server_ip}:6443 \
+      K3S_TOKEN='${k3s_token}' \
+      INSTALL_K3S_EXEC='agent --node-ip=${node_ip}' \
+      sh -
+  - touch /var/log/k3s-bootstrap.done

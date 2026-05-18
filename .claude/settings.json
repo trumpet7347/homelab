@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem -Path d:\\\\Homelab -Force | Where-Object { $_.Name -in '.gitignore', 'README.md', 'tofu' } | Select-Object Name, Mode)"
+    ]
+  }
+}

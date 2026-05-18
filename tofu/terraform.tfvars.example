@@ -1,0 +1,70 @@
+# Copy this file to terraform.tfvars and fill in your values.
+# terraform.tfvars is gitignored — never commit secrets.
+
+# --- Proxmox connection ---
+proxmox_endpoint  = "https://pve.lan:8006/"
+proxmox_api_token = "tofu@pve!provisioner=00000000-0000-0000-0000-000000000000"
+proxmox_insecure  = true
+proxmox_node      = "pve"
+
+# SSH credentials for the Proxmox host (the provider needs these to upload
+# cloud-init snippets, which is not supported via the API).
+# proxmox_ssh_password is sensitive — prefer setting it via env var
+# (TF_VAR_proxmox_ssh_password) rather than committing it here.
+proxmox_ssh_username = "root"
+proxmox_ssh_password = "REPLACE_OR_USE_TF_VAR_ENV"
+
+# --- Template + storage ---
+template_vmid        = 9000          # change to your Ubuntu 24.04 template's VMID
+vm_storage_pool      = "storage"
+snippet_storage_pool = "local"
+
+# --- Networking ---
+network_bridge    = "vmbr0"
+network_cidr_bits = 24
+network_gateway   = "192.168.50.1"
+
+# --- Cluster auth ---
+# ssh_user is the username baked into the VM template (e.g. "ubuntu",
+# "philip"). The provider sets this as the cloud-init user on each VM
+# and authorizes ssh_public_key for it.
+ssh_user       = "ubuntu"
+ssh_public_key = "ssh-ed25519 AAAA... user@host"
+k3s_token      = "REPLACE_WITH_64_CHAR_RANDOM_STRING"
+
+# --- Topology ---
+# root_disk_gb resizes the cloned template's virtio0 OS disk. The template
+# has cloud-initramfs-growroot, so the partition + filesystem auto-extend
+# on first boot. Size must be >= the template's existing disk size (you
+# can only grow, not shrink).
+# vm_id sets the Proxmox VMID. Pick a contiguous block (e.g. 200-202) so
+# the cluster nodes group together in the Proxmox UI.
+server = {
+  hostname     = "k3s-server-01"
+  vm_id        = 200
+  ip           = "192.168.50.150"
+  cpu_cores    = 4
+  memory_mb    = 8192
+  root_disk_gb = 40
+}
+
+agents = [
+  {
+    hostname     = "k3s-agent-01"
+    vm_id        = 201
+    ip           = "192.168.50.151"
+    cpu_cores    = 6
+    memory_mb    = 16384
+    root_disk_gb = 40
+    data_disk_gb = 100
+  },
+  {
+    hostname     = "k3s-agent-02"
+    vm_id        = 202
+    ip           = "192.168.50.152"
+    cpu_cores    = 6
+    memory_mb    = 16384
+    root_disk_gb = 40
+    data_disk_gb = 100
+  }
+]
