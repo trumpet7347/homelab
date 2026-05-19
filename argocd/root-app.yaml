@@ -22,6 +22,16 @@ spec:
     server: https://kubernetes.default.svc
     namespace: argocd
 
+  # Child Applications get transient fields written by ArgoCD itself during
+  # sync (the operation field, status updates). Those aren't in git, so the
+  # root app would see them as drift on every child sync. Ignore them.
+  ignoreDifferences:
+    - group: argoproj.io
+      kind: Application
+      jsonPointers:
+        - /operation
+        - /status
+
   syncPolicy:
     automated:
       prune: true

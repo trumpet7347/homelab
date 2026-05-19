@@ -25,6 +25,17 @@ spec:
     server: https://kubernetes.default.svc
     namespace: metallb-system
 
+  # The MetalLB CRDs (bgppeers etc.) get default-populated fields from the
+  # K8s API server that aren't in the chart's rendered manifest, causing
+  # constant OutOfSync drift. Ignore those specific fields so the comparison
+  # is stable.
+  ignoreDifferences:
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      jsonPointers:
+        - /spec/preserveUnknownFields
+        - /spec/conversion
+
   syncPolicy:
     automated:
       prune: true
