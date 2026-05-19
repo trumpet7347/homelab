@@ -20,8 +20,22 @@ package_upgrade: false
 packages:
   - curl
   - netcat-openbsd
+  # Longhorn prereqs: iSCSI for volume attachment, NFS for RWX volumes,
+  # cryptsetup for encrypted volume support.
+  - open-iscsi
+  - nfs-common
+  - cryptsetup
+
+# Persist the iscsi_tcp kernel module across reboots so Longhorn's iSCSI
+# stack works after every reboot, not just the one where modprobe ran.
+write_files:
+  - path: /etc/modules-load.d/iscsi.conf
+    content: |
+      iscsi_tcp
 
 runcmd:
+  - systemctl enable --now iscsid
+  - modprobe iscsi_tcp
   - |
     until nc -z ${server_ip} 6443; do
       echo "[k3s-agent] waiting for server ${server_ip}:6443..."

@@ -187,6 +187,14 @@ Operator must complete these once before the first `tofu apply`:
 4. Generate a k3s cluster token (random 64-char string) for tfvars.
 5. Note the VM template's VMID from `qm list` for tfvars.
 
+## Longhorn node prereqs
+
+The cloud-init templates also install `open-iscsi`, `nfs-common`, and
+`cryptsetup` on every node, enable `iscsid`, and persist the
+`iscsi_tcp` kernel module via `/etc/modules-load.d/iscsi.conf`.
+These are required by Longhorn (installed later by ArgoCD); baking
+them into cloud-init means rebuilds don't need a manual SSH loop.
+
 ## qemu-guest-agent, default user, SSH key
 
 `qemu-guest-agent` is baked into the template (auto-starts on boot), so

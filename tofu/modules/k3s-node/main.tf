@@ -18,6 +18,18 @@ resource "proxmox_virtual_environment_file" "user_data" {
     data      = var.user_data
     file_name = "${var.hostname}-user-data.yaml"
   }
+
+  lifecycle {
+    ignore_changes = [
+      # bpg marks source_raw.data as ForceNew, so any cloud-init edit would
+      # destroy this snippet (new file ID), which cascades to destroying the
+      # VMs that reference it via user_data_file_id. cloud-init only runs on
+      # first boot, so pushing edits to running VMs has no functional effect.
+      # On a deliberate destroy + apply, the file is created fresh from the
+      # current template, so the new content lands on rebuild.
+      source_raw[0].data,
+    ]
+  }
 }
 
 resource "proxmox_virtual_environment_vm" "node" {
