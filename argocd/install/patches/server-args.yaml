@@ -1,0 +1,19 @@
+# Patch: add --insecure to argocd-server args so it serves HTTP (no TLS).
+# Acceptable on a LAN homelab; revisit when adding hostname-based ingress.
+#
+# ArgoCD's container uses an entrypoint.sh wrapper: command is entrypoint.sh,
+# args is [<binary path>, ...flags]. We patch args (not command) so the wrapper
+# is preserved and --insecure ends up on the binary. Strategic merge replaces
+# the args list, so we include the upstream default arg explicitly.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argocd-server
+spec:
+  template:
+    spec:
+      containers:
+        - name: argocd-server
+          args:
+            - /usr/local/bin/argocd-server
+            - --insecure

@@ -1,0 +1,10 @@
+# Patch: make argocd-server reachable via MetalLB once MetalLB lands.
+# Before MetalLB is up, the service sits Pending — that's fine, ClusterIP
+# access (port-forward) still works.
+apiVersion: v1
+kind: Service
+metadata:
+  name: argocd-server
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 192.168.50.154

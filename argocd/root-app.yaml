@@ -1,0 +1,30 @@
+# The App-of-Apps root. Applied by bootstrap.sh after the install kustomization
+# is up. Watches argocd/apps/ as a directory and creates one Application per
+# YAML file found.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/trumpet7347/homelab.git
+    targetRevision: main
+    path: argocd/apps
+    directory:
+      recurse: false
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: false
+    syncOptions:
+      - CreateNamespace=true

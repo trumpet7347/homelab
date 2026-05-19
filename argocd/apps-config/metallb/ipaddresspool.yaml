@@ -1,0 +1,10 @@
+# The LB IP pool MetalLB hands out to LoadBalancer services.
+# Range matches the reservation in the tofu design.
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: lan-pool
+  namespace: metallb-system
+spec:
+  addresses:
+    - 192.168.50.154-192.168.50.159

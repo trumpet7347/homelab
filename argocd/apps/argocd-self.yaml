@@ -1,0 +1,35 @@
+# argocd-self Application — ArgoCD reconciling its own install.
+# Points at argocd/install/, the same kustomization the bootstrap script
+# applied. Once this is Synced, any change to argocd/install/ propagates
+# via git push, no manual kubectl reapply needed.
+#
+# Sync wave 2: deploys after MetalLB so the LoadBalancer service can be
+# assigned an IP cleanly. (Strictly speaking, wave order is for clarity;
+# the install is idempotent and applies fine in any order.)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-self
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/trumpet7347/homelab.git
+    targetRevision: main
+    path: argocd/install
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+
+  syncPolicy:
+    automated:
+      prune: false       # don't let ArgoCD prune its own resources
+      selfHeal: false
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true

@@ -1,0 +1,32 @@
+# csi-driver-smb Application — installs the CSI driver only.
+# StorageClass + Secret for the actual media share is added later, once
+# the cluster is healthy and we're ready to wire the media stack.
+# Sync wave 1: parallel with Longhorn, no inter-dependency.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: smb-csi
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+
+  source:
+    repoURL: https://raw.githubusercontent.com/kubernetes-csi/csi-driver-smb/master/charts
+    chart: csi-driver-smb
+    targetRevision: v1.16.0
+    helm:
+      releaseName: csi-driver-smb
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: false
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

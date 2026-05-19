@@ -1,0 +1,42 @@
+# Longhorn Application — block storage for in-cluster persistent volumes.
+# Sync wave 1: needs MetalLB-allocated LB IPs not strictly required, but
+# we group it after MetalLB for predictable ordering.
+# Uses the 100 GB scsi1 disk on each k3s-agent node (configured in tofu).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: longhorn
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+
+  source:
+    repoURL: https://charts.longhorn.io
+    chart: longhorn
+    targetRevision: 1.7.2
+    helm:
+      releaseName: longhorn
+      values: |
+        # Use the secondary disk attached at /dev/sdb on each worker.
+        # Longhorn auto-discovers disks declared in node annotations; the
+        # default scans /var/lib/longhorn which lives on the root disk.
+        # For now we use the chart default (root-disk-backed) and add the
+        # extra-disk config in a follow-up after the cluster is healthy.
+        defaultSettings:
+          defaultReplicaCount: 2
+          # Avoid scheduling Longhorn replicas across the same disk.
+          replicaSoftAntiAffinity: true
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: longhorn-system
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: false
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
