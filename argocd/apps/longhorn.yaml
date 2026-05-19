@@ -19,6 +19,14 @@ spec:
     helm:
       releaseName: longhorn
       values: |
+        # Disable the pre-upgrade checker Job. The chart docs note this is
+        # the correct setting "when installing Longhorn using Argo CD or
+        # other GitOps solutions" — the Job references a ServiceAccount
+        # that the same chart sync creates, which ArgoCD applies AFTER
+        # hooks, so the Job can't ever come up.
+        preUpgradeChecker:
+          jobEnabled: false
+
         # Use the secondary disk attached at /dev/sdb on each worker.
         # Longhorn auto-discovers disks declared in node annotations; the
         # default scans /var/lib/longhorn which lives on the root disk.
@@ -39,9 +47,3 @@ spec:
       selfHeal: false
     syncOptions:
       - CreateNamespace=true
-      # Skip the Longhorn pre-upgrade Helm hook. It references a
-      # ServiceAccount that's a regular chart resource, so under ArgoCD's
-      # hook-first ordering the Job can't even create its pod. The check
-      # the hook would do (iSCSI/NFS/cryptsetup installed?) is done
-      # manually on the nodes as a prereq.
-      - SkipHooks=true
