@@ -39,3 +39,9 @@ spec:
       selfHeal: false
     syncOptions:
       - CreateNamespace=true
+      # Skip the Longhorn pre-upgrade Helm hook. It references a
+      # ServiceAccount that's a regular chart resource, so under ArgoCD's
+      # hook-first ordering the Job can't even create its pod. The check
+      # the hook would do (iSCSI/NFS/cryptsetup installed?) is done
+      # manually on the nodes as a prereq.
+      - SkipHooks=true
